@@ -41,7 +41,7 @@ const createBlog = async function (req, res) {
         }
         //checking if authorId is a valid ObjectId or not
         let id = mongoose.Types.ObjectId.isValid(authorId)
-        if (!id) return res.status(400).send({ status: false, message: "authorId is not a valid ObjectId" });
+        if (!id) return res.status(401).send({ status: false, message: "authorId is not a valid ObjectId" });
         let author = await authorModel.findById(authorId);
         if (!author) return res.status(404).send({ status: false, message: "No Author Found With This ID" });
         // saving the new blog document in the blog collection
@@ -76,34 +76,27 @@ const getBlog = async function (req, res) {
         isDeleted: false,
         isPublished: true
       };
-  
       // Apply filters
       if (filters.authorId) {
         let id = mongoose.Types.ObjectId.isValid(filters.authorId)
-        if (!id) return res.status(400).send({ status: false, message: "authorId is not a valid ObjectId" });
+        if (!id) return res.status(401).send({ status: false, message: "authorId is not a valid ObjectId" });
         query.authorId = filters.authorId;
       }
-
       if(filters.title){
         query.title = filters.title;
       }
-
       if(filters.body){
         query.body = filters.body;
       }
-  
       if (filters.category) {
         query.category = filters.category;
       }
-  
       if (filters.tags) {
         query.tags = { $in: filters.tags };
       }
-  
       if (filters.subcategory) {
         query.subcategory = { $in: filters.subcategory };
       }
-  
       const blogs = await blogModel.find(query);
   
       if (blogs.length === 0) {
@@ -122,7 +115,8 @@ const getBlog = async function (req, res) {
 const updateBlog = async function (req, res) {
     try {
       const {blogId} = req.params;
-      
+      if(!mongoose.Types.ObjectId.isValid(blogId)) return res.status(400).json({ status: false, message: "not a valid object Id" });
+
       const { title, body, tags, subcategory } = req.body;
   
       const blog = await blogModel.findOneAndUpdate(
@@ -155,21 +149,17 @@ const updateBlog = async function (req, res) {
 
 //  Deleting blog by ID
 const deleteBlogById = async function (req, res) {
-
     try {
         let {blogId} = req.params;
-
         let blog = await blogModel.findOne({
             _id: blogId,
             isDeleted: false
         })
-
         if (blog == null) {
             return res.status(404).send({
                 message: 'no such blog exists'
             });
         }
-
         let deleteUser = await blogModel.findOneAndUpdate(
             {
             _id: blogId,
@@ -182,7 +172,6 @@ const deleteBlogById = async function (req, res) {
         }, {
             new: true
         })
-
         res.status(200).send({
             status: true,
             data: "deletion succesfull"
@@ -212,22 +201,18 @@ const deleteByQuerying = async function (req, res) {
             isPublished
         } = req.query
         
-
         //check if the query field is empty
         if (Object.keys(data).length == 0) return res.status(400).send({
             status: false,
             message: "Enter the details of blog that you would like to delete"
         })
-
         if (authorId) {
             if(!mongoose.Types.ObjectId.isValid(authorId))
-            return res.status(400).send({
+            return res.status(401).send({
                 status: false,
                 message: "authorId is not a valid ObjectId"
             });
         }
-
-
         //finding document using query params
         const ToBeDeleted = await blogModel.findOneAndUpdate({
             isDeleted: false,
@@ -250,7 +235,6 @@ const deleteByQuerying = async function (req, res) {
             }
         },
         {new  : true})
-
         if (ToBeDeleted == null) return res.status(404).send({
             status: false,
             message: "Blog not found or it was already deleted"

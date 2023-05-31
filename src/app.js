@@ -11,7 +11,7 @@ app.use(express.json())
 app.use(express.urlencoded({extended : true}))
 
 // Morgan
-app.use(morgan("tiny"))
+app.use(morgan("combined"))
 // cors
 app.use(cors())
 

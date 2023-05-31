@@ -1,5 +1,5 @@
 // const bcrypt = require('bcryptjs')
-const bcrypt = require('bcrypt')
+// const bcrypt = require('bcrypt')
 const authorModel = require('../models/authorModel')
 const jwt = require('jsonwebtoken')
 const { isValid,
@@ -18,7 +18,7 @@ const createAuthor = async function (req, res) {
   try {
       let author = req.body
       const { title, fname, lname, email, password } = author;
-      if (Object.keys(author).length == 0) { res.status(400).send({ status: false, message: "Enter the Author details" }) }
+      if (Object.keys(author).length == 0) {return res.status(400).send({ status: false, message: "Enter the Author details" }) }
       
       //checking for required fields
       if (!title) { return res.status(400).send({ status: false, message: "title is required" }) }
@@ -42,8 +42,8 @@ const createAuthor = async function (req, res) {
       if (!validString(lname)) { return res.status(400).send({ status: false, message: "author last name is not valid string" }) }
 
       if(password.length < 8) return res.status(400).send({status : false , message : "Password length should be greater than 8 characters"})
-      // if (!isValid(password)) { return res.status(400).send({ status: false, message: "password name is not valid" }) }
-      if (!isValidPassword(password)) { return res.status(400).send({ status: false, message: "invalid password " }) }
+      if (!isValid(password)) { return res.status(400).send({ status: false, message: "password name is not valid" }) }
+    //   if (!isValidPassword(password)) { return res.status(400).send({ status: false, message: "invalid password " }) }
 
       if (!isValid(email)) { return res.status(400).send({ status: false, message: " Invalid email" }) }
 
@@ -54,9 +54,9 @@ const createAuthor = async function (req, res) {
       if (uniqueMail) return res.status(400).send({ status: false, message: "this email already exist" });
 
       // Hashing the password using bcrypt
-      const saltRounds = 10; // Number of salt rounds
-      const hashedPassword = await bcrypt.hash(password, saltRounds);
-      author.password = hashedPassword;
+    //   const saltRounds = 10; // Number of salt rounds
+    //   const hashedPassword = await bcrypt.hash(password, saltRounds);
+    //   author.password = hashedPassword;
 
       let authorCreated = await authorModel.create(author)
       return res.status(201).send({ status: true, data: authorCreated })
@@ -91,13 +91,13 @@ const login = async(req,res)=>{
         const author = await authorModel.findOne({email : email})
 
 
-        if(!author) return res.status(400).json({status : false, message : 'You are not registered'})
+        if(!author) return res.status(401).json({status : false, message : 'You are not registered'})
         console.log(author.password)
 
-        const isValidAuthor =  bcrypt.compareSync(password, author.password)
+        // const isValidAuthor =  bcrypt.compareSync(password, author.password)
 
-        if(isValidAuthor){
-            const token = jwt.sign({id : author._id}, JWT_SECRET,{
+        if(password){
+            const token = jwt.sign({author_Id : author._id}, JWT_SECRET,{
                 expiresIn : JWT_EXPIRY
             })
 

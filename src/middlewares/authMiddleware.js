@@ -13,10 +13,9 @@ const isLoggedIn = async (req, res, next) => {
     try {
         const token = req.headers['X-Api-Key'] || req.headers['x-api-key']
 
-        if (!token) return res.status(404).json({
+        if (!token) return res.status(401).json({
             Message: "Token Not Found"
         })
-
         jwt.verify(token, JWT_SECRET, async(error, decoded) => {
             if (error) {
                 return res.status(401).json({
@@ -24,15 +23,13 @@ const isLoggedIn = async (req, res, next) => {
                     message: "Invalid Token Authentication failed"
                 });
             }
-
-            const author = await authorModel.findById(decoded.id);
+            const author = await authorModel.findById(decoded.author_id );
 
             if (!author) {
                 return res.status(401).json({
                     message: 'Unauthorized access'
                 });
             }
-
             req.iD = author._id;
             next();
         });
@@ -52,17 +49,14 @@ const authorization = async function (req, res, next) {
         let token = req.headers["x-api-key"]
         const decoded = jwt.verify(token, JWT_SECRET)
 
-        let decodedAuthor = decoded.id
+        let decodedAuthor = decoded.author_id
         let blogId = req.params.blogId
-
         //get author Id by searching in database 
         let getBlog = await blogModel.findById(blogId)
-
         if (getBlog == null) return res.status(404).send({
             status: false,
             message: "Blog not found"
         });
-
         let author = getBlog.authorId.toString()
         if (decodedAuthor !== author) return res.status(400).send({
             status: false,
